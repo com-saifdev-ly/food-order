@@ -5,7 +5,7 @@ function App() {
     <div className="App">
       <main className="App-shell">
         <section className="Hero-card">
-          <p className="Eyebrow">Order and pick up food for your family</p>
+          <p className="Eyebrow">Order and pick up food for your family and friends</p>
           <h1>Welcome to Food Order</h1>
 
           <div className="Action-row">
