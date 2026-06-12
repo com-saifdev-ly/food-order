@@ -33,7 +33,20 @@ const translations = {
   },
 };
 
-function getLanguage(location = window.location) {
+function getPreferredLanguage(browserNavigator = navigator) {
+  const browserLanguages = Array.isArray(browserNavigator.languages) && browserNavigator.languages.length > 0
+    ? browserNavigator.languages
+    : [browserNavigator.language];
+  const supportedLanguage = browserLanguages.find((language) => {
+    const normalizedLanguage = language?.toLowerCase();
+
+    return normalizedLanguage?.startsWith('ar') || normalizedLanguage?.startsWith('en');
+  });
+
+  return supportedLanguage?.toLowerCase().startsWith('ar') ? 'ar' : 'en';
+}
+
+export function getLanguage(location = window.location, browserNavigator = navigator) {
   const params = new URLSearchParams(location.search);
   const requestedLanguage = params.get('lang');
 
@@ -41,7 +54,7 @@ function getLanguage(location = window.location) {
     return requestedLanguage;
   }
 
-  return navigator.language?.toLowerCase().startsWith('ar') ? 'ar' : 'en';
+  return getPreferredLanguage(browserNavigator);
 }
 
 function readAuthParams(location) {

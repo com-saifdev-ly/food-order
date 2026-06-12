@@ -1,6 +1,6 @@
 import { afterEach, expect, test } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import App from './App';
+import App, { getLanguage } from './App';
 
 afterEach(() => {
   window.history.pushState({}, '', '/');
@@ -17,6 +17,20 @@ test('renders the Food Order welcome page', () => {
   expect(screen.getByRole('button', { name: /mac/i })).toBeDefined();
   expect(screen.getByRole('button', { name: /ios/i })).toBeDefined();
   expect(screen.getByRole('button', { name: /android/i })).toBeDefined();
+});
+
+test('auto-selects Arabic from the browser language list', () => {
+  const location = new URL('https://food-order.test/');
+  const browserNavigator = { languages: ['ar-LY', 'en-US'], language: 'en-US' };
+
+  expect(getLanguage(location, browserNavigator)).toBe('ar');
+});
+
+test('uses the URL language when it is provided', () => {
+  const location = new URL('https://food-order.test/?lang=en');
+  const browserNavigator = { languages: ['ar-LY'], language: 'ar-LY' };
+
+  expect(getLanguage(location, browserNavigator)).toBe('en');
 });
 
 test('renders a successful Supabase email confirmation callback', () => {
