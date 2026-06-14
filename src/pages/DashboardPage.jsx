@@ -22,7 +22,7 @@ export default function DashboardPage({ language }) {
         session.user.id,
         session.user.email,
         userMetadata.full_name || '',
-        userMetadata.account_type || 'customer'
+        userMetadata.role || 'customer'
       );
       
       console.log('Profile from database:', profile);
@@ -55,7 +55,7 @@ export default function DashboardPage({ language }) {
   }
 
   const fullName = profile?.full_name || copy.unknown;
-  const accountType = profile?.role || copy.unknown;
+  const role = profile?.role || copy.unknown;
   const email = profile?.email || session.user.email;
 
   return (
@@ -77,7 +77,7 @@ export default function DashboardPage({ language }) {
           <div className="Dashboard-info-item">
             <span className="Dashboard-info-label">{copy.accountTypeDisplayLabel}:</span>
             <span className="Dashboard-info-value">
-              {accountType === 'customer' ? copy.customer : accountType === 'delivery' ? copy.delivery : copy.unknown}
+              {role === 'customer' ? copy.customer : role === 'delivery' ? copy.delivery : copy.unknown}
             </span>
           </div>
         </div>
@@ -86,7 +86,7 @@ export default function DashboardPage({ language }) {
         {process.env.NODE_ENV === 'development' && (
           <div style={{ marginTop: '20px', padding: '10px', background: 'rgba(255,0,0,0.1)', borderRadius: '8px', fontSize: '12px' }}>
             <p><strong>Debug Info (from database):</strong></p>
-            <p>Account Type: {accountType}</p>
+            <p>Role: {role}</p>
             <p>Profile Data: {JSON.stringify(profile)}</p>
           </div>
         )}

@@ -41,7 +41,7 @@ export default function SignUpPage({ language }) {
       options: {
         data: {
           full_name: fullName,
-          account_type: accountType,
+          role: accountType,
         },
         emailRedirectTo: `${window.location.origin}/auth/callback?lang=${language}`,
       },

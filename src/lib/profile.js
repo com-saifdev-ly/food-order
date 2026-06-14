@@ -20,7 +20,7 @@ export async function getProfile(userId) {
   }
 }
 
-export async function createProfile(userId, email, fullName, accountType) {
+export async function createProfile(userId, email, fullName, role) {
   try {
     const { data, error } = await supabase
       .from('profiles')
@@ -28,7 +28,7 @@ export async function createProfile(userId, email, fullName, accountType) {
         id: userId,
         email: email,
         full_name: fullName,
-        role: accountType || 'customer',
+        role: role || 'customer',
       })
       .select()
       .single();
@@ -66,13 +66,13 @@ export async function updateProfile(userId, updates) {
   }
 }
 
-export async function getOrCreateProfile(userId, email, fullName, accountType) {
+export async function getOrCreateProfile(userId, email, fullName, role) {
   // Try to get existing profile first
   let profile = await getProfile(userId);
 
   // If profile doesn't exist, create it
   if (!profile) {
-    profile = await createProfile(userId, email, fullName, accountType);
+    profile = await createProfile(userId, email, fullName, role);
   }
 
   return profile;
