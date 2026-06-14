@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import PageShell from '../components/PageShell';
 import { getLocalizedPath, translations } from '../lib/i18n';
 import { supabase } from '../lib/supabase';
@@ -5,14 +6,47 @@ import { useAuthSession } from '../lib/useAuthSession';
 
 export default function DashboardPage({ language }) {
   const copy = translations[language];
-  const { session, loading } = useAuthSession();
+  const { session, loading: authLoading } = useAuthSession();
+  const [userData, setUserData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchUserData() {
+      if (!session) return;
+
+      try {
+        // Fetch user data from Supabase auth API
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        
+        if (userError) {
+          console.error('Error fetching user data:', userError);
+          setLoading(false);
+          return;
+        }
+
+        // Get user metadata and additional user info
+        const userMetadata = user.user_metadata || {};
+        setUserData({
+          fullName: userMetadata.full_name || user.email?.split('@')[0] || 'Unknown',
+          email: user.email || 'Unknown',
+          accountType: userMetadata.account_type || 'customer',
+        });
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+        setLoading(false);
+      }
+    }
+
+    fetchUserData();
+  }, [session]);
 
   async function handleSignOut() {
     await supabase.auth.signOut();
     window.location.href = getLocalizedPath('/', language);
   }
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <PageShell language={language}>
         <section className="Hero-card">
@@ -28,10 +62,9 @@ export default function DashboardPage({ language }) {
     return null;
   }
 
-  const userMetadata = session.user.user_metadata || {};
-  const fullName = userMetadata.full_name || copy.unknown;
-  const accountType = userMetadata.account_type || copy.unknown;
-  const email = session.user.email;
+  const fullName = userData?.fullName || copy.unknown;
+  const accountType = userData?.accountType || copy.unknown;
+  const email = userData?.email || copy.unknown;
 
   return (
     <PageShell language={language}>
@@ -50,7 +83,7 @@ export default function DashboardPage({ language }) {
             <span className="Dashboard-info-value">{email}</span>
           </div>
           <div className="Dashboard-info-item">
-            <span className="Dashboard-info-label">{copy.accountTypeLabel}:</span>
+            <span className="Dashboard-info-label">{copy.accountTypeDisplayLabel}:</span>
             <span className="Dashboard-info-value">
               {accountType === 'customer' ? copy.customer : accountType === 'delivery' ? copy.delivery : copy.unknown}
             </span>
