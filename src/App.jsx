@@ -12,6 +12,7 @@ import DashboardPage from './pages/DashboardPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import { supabase } from './lib/supabase';
 import { useAuthSession } from './lib/useAuthSession';
+import { Analytics } from '@vercel/analytics/react';
 
 export { getLanguage } from './lib/i18n';
 
@@ -145,26 +146,56 @@ function App() {
   const { pathname } = window.location;
 
   if (pathname === '/auth/callback') {
-    return <AuthCallback language={language} />;
+    return (
+      <>
+        <AuthCallback language={language} />
+        <Analytics />
+      </>
+    );
   }
 
   if (pathname === '/auth/sign-in') {
-    return <SignInPage language={language} />;
+    return (
+      <>
+        <SignInPage language={language} />
+        <Analytics />
+      </>
+    );
   }
 
   if (pathname === '/auth/sign-up') {
-    return <SignUpPage language={language} />;
+    return (
+      <>
+        <SignUpPage language={language} />
+        <Analytics />
+      </>
+    );
   }
 
   if (pathname === '/reset-password') {
-    return <ResetPasswordPage language={language} />;
+    return (
+      <>
+        <ResetPasswordPage language={language} />
+        <Analytics />
+      </>
+    );
   }
 
   if (pathname === '/dashboard') {
-    return <DashboardPage language={language} />;
+    return (
+      <>
+        <DashboardPage language={language} />
+        <Analytics />
+      </>
+    );
   }
 
-  return <HomePage language={language} />;
+  return (
+    <>
+      <HomePage language={language} />
+      <Analytics />
+    </>
+  );
 }
 
 export default App;
