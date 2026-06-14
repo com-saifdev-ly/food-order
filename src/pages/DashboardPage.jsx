@@ -3,42 +3,34 @@ import PageShell from '../components/PageShell';
 import { getLocalizedPath, translations } from '../lib/i18n';
 import { supabase } from '../lib/supabase';
 import { useAuthSession } from '../lib/useAuthSession';
+import { getOrCreateProfile } from '../lib/profile';
 
 export default function DashboardPage({ language }) {
   const copy = translations[language];
   const { session, loading: authLoading } = useAuthSession();
-  const [userData, setUserData] = useState(null);
+  const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchUserData() {
+    async function loadProfile() {
       if (!session) return;
 
-      try {
-        // Fetch user data from Supabase auth API
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
-        
-        if (userError) {
-          console.error('Error fetching user data:', userError);
-          setLoading(false);
-          return;
-        }
-
-        // Get user metadata and additional user info
-        const userMetadata = user.user_metadata || {};
-        setUserData({
-          fullName: userMetadata.full_name || user.email?.split('@')[0] || 'Unknown',
-          email: user.email || 'Unknown',
-          accountType: userMetadata.account_type || 'customer',
-        });
-        setLoading(false);
-      } catch (error) {
-        console.error('Error fetching user data:', error);
-        setLoading(false);
-      }
+      const userMetadata = session.user.user_metadata || {};
+      
+      // Fetch profile from database table
+      const profile = await getOrCreateProfile(
+        session.user.id,
+        session.user.email,
+        userMetadata.full_name || '',
+        userMetadata.account_type || 'customer'
+      );
+      
+      console.log('Profile from database:', profile);
+      setProfile(profile);
+      setLoading(false);
     }
 
-    fetchUserData();
+    loadProfile();
   }, [session]);
 
   async function handleSignOut() {
@@ -62,9 +54,9 @@ export default function DashboardPage({ language }) {
     return null;
   }
 
-  const fullName = userData?.fullName || copy.unknown;
-  const accountType = userData?.accountType || copy.unknown;
-  const email = userData?.email || copy.unknown;
+  const fullName = profile?.full_name || copy.unknown;
+  const accountType = profile?.role || copy.unknown;
+  const email = profile?.email || session.user.email;
 
   return (
     <PageShell language={language}>
@@ -89,6 +81,15 @@ export default function DashboardPage({ language }) {
             </span>
           </div>
         </div>
+
+        {/* Debug info - can be removed later */}
+        {process.env.NODE_ENV === 'development' && (
+          <div style={{ marginTop: '20px', padding: '10px', background: 'rgba(255,0,0,0.1)', borderRadius: '8px', fontSize: '12px' }}>
+            <p><strong>Debug Info (from database):</strong></p>
+            <p>Account Type: {accountType}</p>
+            <p>Profile Data: {JSON.stringify(profile)}</p>
+          </div>
+        )}
 
         <div className="Action-row">
           <button type="button" className="Primary-btn" onClick={handleSignOut}>

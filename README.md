@@ -9,6 +9,7 @@ A modern food ordering web application built with React, Vite, and Supabase. Fea
 - **User Roles**: Customer and Delivery account types
 - **Multi-language Support**: English and Arabic with RTL support
 - **User Dashboard**: Profile management with role-based views
+- **Database Integration**: Supabase profiles table for user data
 - **PWA Support**: Installable as a desktop/mobile app
 - **Responsive Design**: Works on all device sizes
 - **Real-time Updates**: Powered by Supabase real-time database
@@ -25,6 +26,7 @@ A modern food ordering web application built with React, Vite, and Supabase. Fea
 
 - **Frontend**: React 18, Vite 8
 - **Backend**: Supabase (Authentication, Database, Real-time)
+- **Database**: PostgreSQL with Row Level Security
 - **Styling**: CSS with modern design system
 - **PWA**: Service Worker, Web App Manifest
 - **Language**: JavaScript (ES6+)
@@ -55,13 +57,16 @@ VITE_SUPABASE_URL=your_supabase_project_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
-4. **Configure Supabase**
+4. **Set up Supabase database**
+Run the SQL script in `supabase/setup_profiles.sql` in your Supabase SQL Editor.
+
+5. **Configure Supabase**
 - Go to Authentication > URL Configuration in your Supabase dashboard
 - Set Site URL to your frontend URL
 - Add your domain to Redirect URLs
 - Configure email templates if desired
 
-5. **Start the development server**
+6. **Start the development server**
 ```bash
 npm start
 ```
@@ -75,17 +80,28 @@ The app will be available at `http://localhost:3001`
 - `npm run preview` - Preview production build
 - `npm test` - Run tests
 
-## 🗄️ Data Storage
+## 🗄️ Database Schema
 
-### User Data
-User profile information is stored in Supabase's `user_metadata`:
-- **Full name**: User's full name
-- **Account type**: Customer or Delivery role
-- **Email**: Managed automatically by Supabase auth
+### Profiles Table
+```sql
+CREATE TABLE public.profiles (
+  id uuid references auth.users(id),
+  full_name text,
+  role user_role (customer/delivery),
+  avatar_url text,
+  email varchar,
+  created_at timestamp
+);
+```
 
-This approach is simple and sufficient for the MVP. For larger applications, you can migrate to a database table.
+**Benefits of database table over metadata:**
+- SQL query capabilities
+- Data relationships with other tables
+- Performance with indexes
+- Better scalability
+- Analytics and reporting
 
-See `SUPABASE_SETUP.md` for detailed setup instructions.
+See `supabase/setup_profiles.sql` for complete setup including RLS policies and triggers.
 
 ## 🌐 Deployment
 
@@ -108,9 +124,9 @@ Ensure these are set in your deployment environment:
 
 ### Branding
 See `ASSETS_GUIDE.md` for adding custom logos and icons:
-- App icons (192x192, 512x512)
-- Favicon
-- Apple touch icon
+- Shopping cart emoji 🛒 at `/assets/logo.svg`
+- App icons in SVG format (scalable)
+- Conversion instructions for PNG format if needed
 
 ### Colors
 Primary theme colors:
@@ -123,18 +139,24 @@ Primary theme colors:
 ```
 food-order/
 ├── public/           # Static assets
+│   └── assets/       # Logo and favicon files
 ├── src/
 │   ├── components/   # Reusable components
 │   ├── lib/         # Utilities and helpers
+│   │   ├── profile.js  # Database operations
+│   │   └── supabase.js  # Supabase client
 │   ├── pages/       # Page components
 │   ├── App.jsx      # Main app component
 │   └── App.css      # Global styles
+├── supabase/        # Database setup scripts
 └── package.json
 ```
 
 ## 🔐 Security
 
-- Supabase handles authentication and session management
+- Row Level Security (RLS) on profiles table
+- Users can only access their own data
+- Database triggers for automatic profile creation
 - Environment variables for sensitive data
 - Secure authentication flow with Supabase
 - Input validation on all forms

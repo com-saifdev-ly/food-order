@@ -8,26 +8,51 @@
 
 ## Database Setup
 
-### User Data Storage
-This application uses Supabase's built-in `user_metadata` to store user profile information:
-- **Full name**: Stored in `user_metadata.full_name`
-- **Account type**: Stored in `user_metadata.account_type` ('customer' or 'delivery')
-- **Email**: Automatically managed by Supabase auth
+### Run the SQL Setup Script
+Run the SQL script in `supabase/setup_profiles.sql` in your Supabase SQL Editor.
+
+This will:
+- Create `user_role` enum type ('customer', 'delivery')
+- Create `profiles` table with proper constraints
+- Set up Row Level Security (RLS) policies
+- Create automatic profile creation trigger on user signup
+
+### Database Schema
+
+#### Profiles Table
+```sql
+CREATE TABLE public.profiles (
+  id uuid references auth.users(id),
+  full_name text,
+  role user_role (customer/delivery),
+  avatar_url text,
+  email varchar,
+  created_at timestamp
+);
+```
+
+The profiles table stores user profile data separately from Supabase auth, allowing for:
+- **SQL queries** on user data
+- **Data relationships** with other tables (orders, addresses, etc.)
+- **Scalability** for future features
+- **Performance** with proper indexing
+
+### User Data Flow
+
+1. **User signs up** → Data stored in Supabase auth + metadata
+2. **Database trigger** → Automatically creates profile in profiles table
+3. **Dashboard loads** → Fetches from profiles table (not metadata)
+4. **Profile updates** → Direct database operations
 
 ### Email Configuration
 Configure your Supabase project's email settings:
 - Go to Authentication > URL Configuration
-- Set Site URL to your frontend URL (e.g., http://localhost:3001 for development)
-- Set Redirect URLs to include your callback URL
+- Set Site URL to your frontend URL (e.g., https://foodorder.com.ly for production)
+- Add your domain to Redirect URLs: `https://foodorder.com.ly/**`
+- The application will send reset emails that redirect to `/reset-password`
 
 ### Password Reset
 The application has a built-in password reset flow at `/reset-password`.
-
-To configure this in Supabase:
-- Go to Authentication > URL Configuration
-- Set Site URL to your frontend URL (e.g., https://foodorder.com.ly for production)
-- Add your domain to Redirect URLs: `https://foodorder.com.ly/**`
-- The application will send reset emails that redirect to `/reset-password` where users can set a new password
 
 ## Environment Variables
 Create a `.env` file in the project root:
@@ -38,39 +63,23 @@ VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 
 ## Features Implemented
 1. **PWA Support**: Progressive Web App with offline capability
-2. **User Dashboard**: Shows user profile data from user_metadata
+2. **User Dashboard**: Shows user profile data from profiles table
 3. **Account Types**: Customer and Delivery roles
 4. **Password Reset**: Custom password reset flow
 5. **Home Button Navigation**: Appears on non-root pages
-6. **Expandable Download Section**: Toggle to show platform download options
+6. **Database Integration**: Proper profile table with RLS
 7. **Multi-language Support**: English and Arabic with RTL
 
-## User Data Schema
-
-### User Metadata Structure
-```javascript
-{
-  full_name: "User's full name",
-  account_type: "customer" | "delivery",
-  email: "user@example.com" // managed by Supabase
-}
-```
-
 ## Security
-- Supabase handles authentication and session management
-- User data is stored securely in Supabase's user_metadata
-- Password reset flows use secure tokens
-- Row-level security can be added if database tables are introduced later
+- Row Level Security (RLS) enabled on profiles table
+- Users can only access their own profiles
+- Database trigger ensures profile creation on signup
+- Environment variables for sensitive data
 
-## Scaling Considerations
-The current implementation uses Supabase's user_metadata which is:
-- **Quick to implement**: No additional database setup needed
-- **Sufficient for MVP**: Handles basic user profile information
-- **Limited to 2KB**: User metadata has size constraints
-- **Not queryable**: Cannot run SQL queries on metadata
-
-If you need to scale to a full database table in the future:
-- Create a profiles table similar to the schema discussed earlier
-- Migrate existing user_metadata to the new table
-- Update the application code to fetch from the database
-- Add Row-Level Security policies for data protection
+## Scaling Benefits
+Using a database table instead of metadata provides:
+- **Query capabilities**: Can run SQL queries on user data
+- **Relationships**: Can link to orders, addresses, reviews, etc.
+- **Performance**: Database indexes and optimization
+- **Analytics**: Better reporting and data analysis
+- **Backup**: Proper database backup strategies
