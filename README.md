@@ -55,8 +55,11 @@ VITE_SUPABASE_URL=your_supabase_project_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
-4. **Set up Supabase database**
-Run the SQL script in `supabase/setup_profiles.sql` in your Supabase SQL Editor.
+4. **Configure Supabase**
+- Go to Authentication > URL Configuration in your Supabase dashboard
+- Set Site URL to your frontend URL
+- Add your domain to Redirect URLs
+- Configure email templates if desired
 
 5. **Start the development server**
 ```bash
@@ -72,21 +75,17 @@ The app will be available at `http://localhost:3001`
 - `npm run preview` - Preview production build
 - `npm test` - Run tests
 
-## 🗄️ Database Schema
+## 🗄️ Data Storage
 
-### Profiles Table
-```sql
-CREATE TABLE public.profiles (
-  id uuid references auth.users(id),
-  full_name text,
-  role user_role (customer/delivery),
-  avatar_url text,
-  email varchar,
-  created_at timestamp
-);
-```
+### User Data
+User profile information is stored in Supabase's `user_metadata`:
+- **Full name**: User's full name
+- **Account type**: Customer or Delivery role
+- **Email**: Managed automatically by Supabase auth
 
-See `supabase/setup_profiles.sql` for complete setup including RLS policies.
+This approach is simple and sufficient for the MVP. For larger applications, you can migrate to a database table.
+
+See `SUPABASE_SETUP.md` for detailed setup instructions.
 
 ## 🌐 Deployment
 
@@ -130,13 +129,12 @@ food-order/
 │   ├── pages/       # Page components
 │   ├── App.jsx      # Main app component
 │   └── App.css      # Global styles
-├── supabase/        # Database setup scripts
 └── package.json
 ```
 
 ## 🔐 Security
 
-- Row Level Security (RLS) enabled on Supabase tables
+- Supabase handles authentication and session management
 - Environment variables for sensitive data
 - Secure authentication flow with Supabase
 - Input validation on all forms

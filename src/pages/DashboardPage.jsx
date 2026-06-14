@@ -1,41 +1,18 @@
-import { useEffect, useState } from 'react';
 import PageShell from '../components/PageShell';
 import { getLocalizedPath, translations } from '../lib/i18n';
 import { supabase } from '../lib/supabase';
 import { useAuthSession } from '../lib/useAuthSession';
-import { getOrCreateProfile } from '../lib/profile';
 
 export default function DashboardPage({ language }) {
   const copy = translations[language];
-  const { session, loading: authLoading } = useAuthSession();
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function loadProfile() {
-      if (!session) return;
-
-      const userMetadata = session.user.user_metadata || {};
-      const profile = await getOrCreateProfile(
-        session.user.id,
-        session.user.email,
-        userMetadata.full_name || '',
-        userMetadata.account_type || 'customer'
-      );
-      
-      setProfile(profile);
-      setLoading(false);
-    }
-
-    loadProfile();
-  }, [session]);
+  const { session, loading } = useAuthSession();
 
   async function handleSignOut() {
     await supabase.auth.signOut();
     window.location.href = getLocalizedPath('/', language);
   }
 
-  if (authLoading || loading) {
+  if (loading) {
     return (
       <PageShell language={language}>
         <section className="Hero-card">
@@ -51,8 +28,9 @@ export default function DashboardPage({ language }) {
     return null;
   }
 
-  const fullName = profile?.full_name || copy.unknown;
-  const accountType = profile?.role || copy.unknown;
+  const userMetadata = session.user.user_metadata || {};
+  const fullName = userMetadata.full_name || copy.unknown;
+  const accountType = userMetadata.account_type || copy.unknown;
   const email = session.user.email;
 
   return (
