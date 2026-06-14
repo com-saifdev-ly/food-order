@@ -13,6 +13,7 @@ import ResetPasswordPage from './pages/ResetPasswordPage';
 import { supabase } from './lib/supabase';
 import { useAuthSession } from './lib/useAuthSession';
 import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 
 export { getLanguage } from './lib/i18n';
 
@@ -150,6 +151,7 @@ function App() {
       <>
         <AuthCallback language={language} />
         <Analytics />
+        <SpeedInsights />
       </>
     );
   }
@@ -159,6 +161,7 @@ function App() {
       <>
         <SignInPage language={language} />
         <Analytics />
+        <SpeedInsights />
       </>
     );
   }
@@ -168,6 +171,7 @@ function App() {
       <>
         <SignUpPage language={language} />
         <Analytics />
+        <SpeedInsights />
       </>
     );
   }
@@ -177,6 +181,7 @@ function App() {
       <>
         <ResetPasswordPage language={language} />
         <Analytics />
+        <SpeedInsights />
       </>
     );
   }
@@ -186,6 +191,7 @@ function App() {
       <>
         <DashboardPage language={language} />
         <Analytics />
+        <SpeedInsights />
       </>
     );
   }
@@ -194,6 +200,7 @@ function App() {
     <>
       <HomePage language={language} />
       <Analytics />
+      <SpeedInsights />
     </>
   );
 }
