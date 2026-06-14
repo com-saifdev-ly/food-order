@@ -1,81 +1,19 @@
+import { useEffect, useState } from 'react';
 import './App.css';
+import PageShell from './components/PageShell';
+import {
+  confirmAuthSession,
+  getAuthCallbackDisplayState,
+} from './lib/authCallback';
+import { getLanguage, getLocalizedPath, translations } from './lib/i18n';
+import SignInPage from './pages/SignInPage';
+import SignUpPage from './pages/SignUpPage';
+import DashboardPage from './pages/DashboardPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
+import { supabase } from './lib/supabase';
+import { useAuthSession } from './lib/useAuthSession';
 
-const translations = {
-  en: {
-    languageName: 'English',
-    switchLanguage: 'العربية',
-    homeEyebrow: 'Order and pick up food for your family and friends',
-    homeTitle: 'Welcome to Food Order',
-    downloadApp: 'Download the app',
-    platforms: ['Windows', 'Linux', 'Mac', 'iOS', 'Android'],
-    accountEyebrow: 'Food Order account',
-    successTitle: 'Email confirmed',
-    successMessage: 'Your email address has been verified. You can return to Food Order and sign in.',
-    errorTitle: 'Email confirmation failed',
-    pendingTitle: 'Checking confirmation link',
-    pendingMessage: 'This page is ready for Supabase email confirmation links.',
-    backHome: 'Back to Food Order',
-  },
-  ar: {
-    languageName: 'العربية',
-    switchLanguage: 'English',
-    homeEyebrow: 'اطلب الطعام واستلمه لك ولعائلتك وأصدقائك',
-    homeTitle: 'مرحباً بك في Food Order',
-    downloadApp: 'تحميل التطبيق',
-    platforms: ['ويندوز', 'لينكس', 'ماك', 'iOS', 'أندرويد'],
-    accountEyebrow: 'حساب Food Order',
-    successTitle: 'تم تأكيد البريد الإلكتروني',
-    successMessage: 'تم التحقق من بريدك الإلكتروني بنجاح. يمكنك العودة إلى Food Order وتسجيل الدخول.',
-    errorTitle: 'فشل تأكيد البريد الإلكتروني',
-    pendingTitle: 'جار التحقق من رابط التأكيد',
-    pendingMessage: 'هذه الصفحة جاهزة للتعامل مع روابط تأكيد البريد الإلكتروني من Supabase.',
-    backHome: 'العودة إلى Food Order',
-  },
-};
-
-function getPreferredLanguage(browserNavigator = navigator) {
-  const browserLanguages = Array.isArray(browserNavigator.languages) && browserNavigator.languages.length > 0
-    ? browserNavigator.languages
-    : [browserNavigator.language];
-  const supportedLanguage = browserLanguages.find((language) => {
-    const normalizedLanguage = language?.toLowerCase();
-
-    return normalizedLanguage?.startsWith('ar') || normalizedLanguage?.startsWith('en');
-  });
-
-  return supportedLanguage?.toLowerCase().startsWith('ar') ? 'ar' : 'en';
-}
-
-export function getLanguage(location = window.location, browserNavigator = navigator) {
-  const params = new URLSearchParams(location.search);
-  const requestedLanguage = params.get('lang');
-
-  if (requestedLanguage === 'ar' || requestedLanguage === 'en') {
-    return requestedLanguage;
-  }
-
-  return getPreferredLanguage(browserNavigator);
-}
-
-function readAuthParams(location) {
-  const params = new URLSearchParams(location.search);
-  const hash = location.hash.startsWith('#') ? location.hash.slice(1) : location.hash;
-  const hashParams = new URLSearchParams(hash);
-
-  hashParams.forEach((value, key) => {
-    if (!params.has(key)) {
-      params.set(key, value);
-    }
-  });
-
-  return params;
-}
-
-function getLanguageLink(nextLanguage) {
-  const url = new URL(window.location.href);
-  url.searchParams.set('lang', nextLanguage);
-  return `${url.pathname}${url.search}${url.hash}`;
-}
+export { getLanguage } from './lib/i18n';
 
 function StatusIcon({ status }) {
   if (status === 'success') {
@@ -103,96 +41,92 @@ function StatusIcon({ status }) {
   return null;
 }
 
-function LanguageToggle({ language }) {
-  const nextLanguage = language === 'ar' ? 'en' : 'ar';
-
-  return (
-    <a className="Language-toggle" href={getLanguageLink(nextLanguage)} lang={nextLanguage}>
-      {translations[language].switchLanguage}
-    </a>
-  );
-}
-
-export function getAuthCallbackState(location = window.location, language = 'en') {
-  const copy = translations[language] || translations.en;
-  const params = readAuthParams(location);
-  const error = params.get('error_description') || params.get('error');
-  const type = params.get('type');
-  const hasConfirmation = Boolean(
-    params.get('code') ||
-    params.get('access_token') ||
-    params.get('token_hash') ||
-    type === 'signup' ||
-    type === 'email_change',
-  );
-
-  if (error) {
-    return {
-      status: 'error',
-      title: copy.errorTitle,
-      message: error.replace(/\+/g, ' '),
-    };
-  }
-
-  if (hasConfirmation) {
-    return {
-      status: 'success',
-      title: copy.successTitle,
-      message: copy.successMessage,
-    };
-  }
-
-  return {
-    status: 'pending',
-    title: copy.pendingTitle,
-    message: copy.pendingMessage,
-  };
-}
-
 function AuthCallback({ language }) {
   const copy = translations[language];
-  const callbackState = getAuthCallbackState(window.location, language);
+  const [callbackState, setCallbackState] = useState(() =>
+    getAuthCallbackDisplayState({ status: 'pending' }, language, translations),
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function verifyEmailConfirmation() {
+      const result = await confirmAuthSession(supabase, window.location);
+
+      if (!cancelled) {
+        setCallbackState(getAuthCallbackDisplayState(result, language, translations));
+      }
+    }
+
+    verifyEmailConfirmation();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [language]);
 
   return (
-    <div className="App" dir={language === 'ar' ? 'rtl' : 'ltr'} lang={language}>
-      <main className="App-shell">
-        <LanguageToggle language={language} />
-        <section className={`Hero-card Callback-card Callback-card--${callbackState.status}`}>
-          <p className="Eyebrow">{copy.accountEyebrow}</p>
-          <div className="Callback-title">
-            <StatusIcon status={callbackState.status} />
-            <h1>{callbackState.title}</h1>
-          </div>
-          <p className="Callback-message">{callbackState.message}</p>
+    <PageShell language={language}>
+      <section className={`Hero-card Callback-card Callback-card--${callbackState.status}`}>
+        <p className="Eyebrow">{copy.accountEyebrow}</p>
+        <div className="Callback-title">
+          <StatusIcon status={callbackState.status} />
+          <h1>{callbackState.title}</h1>
+        </div>
+        <p className="Callback-message">{callbackState.message}</p>
 
-          <div className="Action-row">
-            <a className="Primary-btn" href={`/?lang=${language}`}>
-              {copy.backHome}
+        <div className="Action-row">
+          {callbackState.status === 'success' ? (
+            <a className="Primary-btn" href={getLocalizedPath('/auth/sign-in', language)}>
+              {copy.signIn}
             </a>
-          </div>
-        </section>
-      </main>
-    </div>
+          ) : null}
+          <a className="Secondary-link" href={getLocalizedPath('/', language)}>
+            {copy.backHome}
+          </a>
+        </div>
+      </section>
+    </PageShell>
   );
 }
 
 function HomePage({ language }) {
   const copy = translations[language];
+  const { session, loading } = useAuthSession();
+  const [showDownloads, setShowDownloads] = useState(false);
+
+  // Redirect to dashboard if already authenticated
+  if (!loading && session) {
+    window.location.href = getLocalizedPath('/dashboard', language);
+    return null;
+  }
 
   return (
-    <div className="App" dir={language === 'ar' ? 'rtl' : 'ltr'} lang={language}>
-      <main className="App-shell">
-        <LanguageToggle language={language} />
-        <section className="Hero-card">
-          <p className="Eyebrow">{copy.homeEyebrow}</p>
-          <h1>{copy.homeTitle}</h1>
+    <PageShell language={language}>
+      <section className="Hero-card">
+        <p className="Eyebrow">{copy.homeEyebrow}</p>
+        <h1>{copy.homeTitle}</h1>
 
-          <div className="Action-row">
-            <button type="button" className="Primary-btn" onClick={(event) => event.preventDefault()}>
-              {copy.downloadApp}
-            </button>
-          </div>
+        <div className="Action-row">
+          <a className="Primary-btn" href={getLocalizedPath('/auth/sign-in', language)}>
+            {copy.signIn}
+          </a>
+          <a className="Secondary-link" href={getLocalizedPath('/auth/sign-up', language)}>
+            {copy.signUp}
+          </a>
+        </div>
 
+        <div className="Action-row">
+          <button 
+            type="button" 
+            className="Primary-btn" 
+            onClick={() => setShowDownloads(!showDownloads)}
+          >
+            {copy.downloadApp}
+          </button>
+        </div>
+
+        {showDownloads && (
           <div className="Download-grid">
             {copy.platforms.map((platform) => (
               <button key={platform} type="button" className="Download-btn" onClick={(event) => event.preventDefault()}>
@@ -200,17 +134,34 @@ function HomePage({ language }) {
               </button>
             ))}
           </div>
-        </section>
-      </main>
-    </div>
+        )}
+      </section>
+    </PageShell>
   );
 }
 
 function App() {
   const language = getLanguage();
+  const { pathname } = window.location;
 
-  if (window.location.pathname === '/auth/callback') {
+  if (pathname === '/auth/callback') {
     return <AuthCallback language={language} />;
+  }
+
+  if (pathname === '/auth/sign-in') {
+    return <SignInPage language={language} />;
+  }
+
+  if (pathname === '/auth/sign-up') {
+    return <SignUpPage language={language} />;
+  }
+
+  if (pathname === '/reset-password') {
+    return <ResetPasswordPage language={language} />;
+  }
+
+  if (pathname === '/dashboard') {
+    return <DashboardPage language={language} />;
   }
 
   return <HomePage language={language} />;
