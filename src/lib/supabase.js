@@ -10,8 +10,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     detectSessionInUrl: true,
-    flowType: 'pkce',
+    flowType: 'implicit', // Changed from 'pkce' to avoid PKCE errors
     redirectTo: `${window.location.origin}/auth/callback`,
-
   },
 });
