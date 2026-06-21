@@ -25,13 +25,11 @@ import SupportPage from './pages/SupportPage';
 import CalculateOrdersPricePage from './pages/CalculateOrdersPricePage';
 import { supabase } from './lib/supabase';
 import { useAuthSession } from './lib/useAuthSession';
-<<<<<<< HEAD
 import { getProfileWithFallback } from './lib/profile';
 import { ConfirmDialog } from './components/ConfirmDialog';
-=======
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/react';
->>>>>>> 4b5eee3bbec9ae2579172b4edf5fa8364a1f19ea
+
 
 export { getLanguage } from './lib/i18n';
 
@@ -197,7 +195,6 @@ function App() {
 
   let page;
   if (pathname === '/auth/callback') {
-<<<<<<< HEAD
     page = <AuthCallback language={language} />;
   } else if (pathname === '/auth/sign-in') {
     page = <SignInPage language={language} />;
@@ -241,7 +238,6 @@ function App() {
     <>
       {page}
       <ConfirmDialog />
-=======
     return (
       <>
         <AuthCallback language={language} />
@@ -296,7 +292,6 @@ function App() {
       <HomePage language={language} />
       <Analytics />
       <SpeedInsights />
->>>>>>> 4b5eee3bbec9ae2579172b4edf5fa8364a1f19ea
     </>
   );
 }
