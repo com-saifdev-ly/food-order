@@ -1,5 +1,6 @@
 # Assets Guide for Food Order App
 
+
 ## Current Assets
 Your project currently has these default assets in the `public/` folder:
 - `favicon.ico` - Browser tab icon
