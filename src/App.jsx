@@ -27,8 +27,6 @@ import { supabase } from './lib/supabase';
 import { useAuthSession } from './lib/useAuthSession';
 import { getProfileWithFallback } from './lib/profile';
 import { ConfirmDialog } from './components/ConfirmDialog';
-import { Analytics } from '@vercel/analytics/react';
-import { SpeedInsights } from '@vercel/speed-insights/react';
 
 
 export { getLanguage } from './lib/i18n';
@@ -238,62 +236,22 @@ function App() {
     <>
       {page}
       <ConfirmDialog />
-    return (
-      <>
-        <AuthCallback language={language} />
-        <Analytics />
-        <SpeedInsights />
-      </>
-    );
-  }
+    </>
+  );
 
   if (pathname === '/auth/sign-in') {
-    return (
-      <>
-        <SignInPage language={language} />
-        <Analytics />
-        <SpeedInsights />
-      </>
-    );
+    return <SignInPage language={language} />;
   }
 
   if (pathname === '/auth/sign-up') {
-    return (
-      <>
-        <SignUpPage language={language} />
-        <Analytics />
-        <SpeedInsights />
-      </>
-    );
+    return <SignUpPage language={language} />;
   }
 
   if (pathname === '/reset-password') {
-    return (
-      <>
-        <ResetPasswordPage language={language} />
-        <Analytics />
-        <SpeedInsights />
-      </>
-    );
+    return <ResetPasswordPage language={language} />;
   }
 
-  if (pathname === '/dashboard') {
-    return (
-      <>
-        <DashboardPage language={language} />
-        <Analytics />
-        <SpeedInsights />
-      </>
-    );
-  }
-
-  return (
-    <>
-      <HomePage language={language} />
-      <Analytics />
-      <SpeedInsights />
-    </>
-  );
+  return <HomePage language={language} />;
 }
 
 export default App;
