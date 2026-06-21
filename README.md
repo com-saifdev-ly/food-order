@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Food Order Application
 
 A modern food ordering application with AI-powered order parsing, multi-language support (English/Arabic), and role-based access for customers and delivery drivers.
@@ -240,3 +241,6 @@ ISC
 ## Support
 
 For issues and questions, open an issue in the GitHub repository.
+=======
+# 🍔 Food Order
+>>>>>>> 4b5eee3bbec9ae2579172b4edf5fa8364a1f19ea

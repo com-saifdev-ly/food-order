@@ -9,7 +9,12 @@
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^14.4.3",
+<<<<<<< HEAD
     "express-rate-limit": "^8.5.2",
+=======
+    "@vercel/analytics": "^2.0.1",
+    "@vercel/speed-insights": "^2.0.0",
+>>>>>>> 4b5eee3bbec9ae2579172b4edf5fa8364a1f19ea
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-turnstile": "^1.1.5",
