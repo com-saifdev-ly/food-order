@@ -5,6 +5,67 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Prevent horizontal overflow */
+  overflow-x: hidden;
+  /* Ensure responsive text rendering */
+  text-size-adjust: 100%;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Ensure all images and media are responsive */
+img, picture, video, canvas, svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+/* Remove default button styles and make them consistent */
+button {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+/* Ensure forms are responsive */
+input, textarea, select {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+/* Remove default list styles */
+ul, ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Ensure proper box-sizing */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+/* HTML & Body reset */
+html, body {
+  height: 100%;
+  width: 100%;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 code {

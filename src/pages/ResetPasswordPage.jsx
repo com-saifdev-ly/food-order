@@ -81,7 +81,7 @@ export default function ResetPasswordPage({ language }) {
     return (
       <PageShell language={language}>
         <section className="Hero-card">
-          <p className="Eyebrow">{copy.accountEyebrow}</p>
+
           <h1>{copy.loading}</h1>
         </section>
       </PageShell>
@@ -92,7 +92,7 @@ export default function ResetPasswordPage({ language }) {
     return (
       <PageShell language={language}>
         <section className="Hero-card Auth-card Callback-card Callback-card--error">
-          <p className="Eyebrow">{copy.accountEyebrow}</p>
+
           <h1>{copy.resetPasswordErrorTitle}</h1>
           <p className="Auth-message">{error || copy.invalidResetLink}</p>
 
@@ -112,7 +112,7 @@ export default function ResetPasswordPage({ language }) {
   return (
     <PageShell language={language}>
       <section className="Hero-card Auth-card">
-        <p className="Eyebrow">{copy.accountEyebrow}</p>
+
         <h1>{copy.resetPasswordTitle}</h1>
         <p className="Auth-message">{copy.resetPasswordMessage}</p>
 

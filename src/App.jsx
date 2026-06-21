@@ -8,10 +8,25 @@ import {
 import { getLanguage, getLocalizedPath, translations } from './lib/i18n';
 import SignInPage from './pages/SignInPage';
 import SignUpPage from './pages/SignUpPage';
-import DashboardPage from './pages/DashboardPage';
+import CustomerDashboardPage from './pages/CustomerDashboardPage';
+import DriverDashboardPage from './pages/DriverDashboardPage';
+import CreateOrderPage from './pages/CreateOrderPage';
+import EditOrderPage from './pages/EditOrderPage';
+import OrdersPage from './pages/OrdersPage';
+import OrderDetailPage from './pages/OrderDetailPage';
+import DeliveryNetworkPage from './pages/DeliveryNetworkPage';
+import AvailableOrdersPage from './pages/AvailableOrdersPage';
+import MyDeliveriesPage from './pages/MyDeliveriesPage';
+import DeliveryOrderDetailPage from './pages/DeliveryOrderDetailPage';
+import DeliveryRequestsPage from './pages/DeliveryRequestsPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
+import PasswordResetRequestPage from './pages/PasswordResetRequestPage';
+import SupportPage from './pages/SupportPage';
+import CalculateOrdersPricePage from './pages/CalculateOrdersPricePage';
 import { supabase } from './lib/supabase';
 import { useAuthSession } from './lib/useAuthSession';
+import { getProfileWithFallback } from './lib/profile';
+import { ConfirmDialog } from './components/ConfirmDialog';
 
 export { getLanguage } from './lib/i18n';
 
@@ -92,14 +107,7 @@ function AuthCallback({ language }) {
 
 function HomePage({ language }) {
   const copy = translations[language];
-  const { session, loading } = useAuthSession();
   const [showDownloads, setShowDownloads] = useState(false);
-
-  // Redirect to dashboard if already authenticated
-  if (!loading && session) {
-    window.location.href = getLocalizedPath('/dashboard', language);
-    return null;
-  }
 
   return (
     <PageShell language={language}>
@@ -142,29 +150,93 @@ function HomePage({ language }) {
 
 function App() {
   const language = getLanguage();
+  const { session, loading: authLoading } = useAuthSession();
   const { pathname } = window.location;
 
+  // Immediate redirect for authenticated users - no rendering at all
+  if (!authLoading && session) {
+    const userRole = session.user.user_metadata?.role || 'customer';
+    
+    // Only redirect if on home page or auth pages
+    if (pathname === '/' || pathname.startsWith('/auth/') || pathname === '/reset-password') {
+      const redirectPath = userRole === 'delivery'
+        ? getLocalizedPath('/driver-dashboard', language)
+        : getLocalizedPath('/customer-dashboard', language);
+      window.location.href = redirectPath;
+      return null; // Don't render anything
+    }
+  }
+
+  // Show nothing during auth loading
+  if (authLoading) {
+    return null;
+  }
+
+  // Check if current path is an auth page - allow these even if authenticated
+  const isAuthPage = pathname === '/auth/sign-in' || 
+                    pathname === '/auth/sign-up' || 
+                    pathname === '/auth/callback' ||
+                    pathname === '/reset-password' ||
+                    pathname === '/auth/reset-password-request';
+
+  // Redirect authenticated users away from auth pages (without profile check for speed)
+  if (session && isAuthPage && pathname !== '/auth/callback') {
+    // Use basic role from metadata for immediate redirect
+    const userRole = session.user.user_metadata?.role || 'customer';
+    const redirectPath = userRole === 'delivery' 
+      ? getLocalizedPath('/driver-dashboard', language)
+      : getLocalizedPath('/customer-dashboard', language);
+    window.location.href = redirectPath;
+    return null;
+  }
+
+  let page;
   if (pathname === '/auth/callback') {
-    return <AuthCallback language={language} />;
+    page = <AuthCallback language={language} />;
+  } else if (pathname === '/auth/sign-in') {
+    page = <SignInPage language={language} />;
+  } else if (pathname === '/auth/sign-up') {
+    page = <SignUpPage language={language} />;
+  } else if (pathname === '/reset-password') {
+    page = <ResetPasswordPage language={language} />;
+  } else if (pathname === '/auth/reset-password-request') {
+    page = <PasswordResetRequestPage language={language} />;
+  } else if (pathname === '/customer-dashboard') {
+    page = <CustomerDashboardPage language={language} />;
+  } else if (pathname === '/create-order') {
+    page = <CreateOrderPage language={language} />;
+  } else if (pathname === '/edit-order') {
+    page = <EditOrderPage language={language} />;
+  } else if (pathname === '/orders') {
+    page = <OrdersPage language={language} />;
+  } else if (pathname === '/calculate-orders-price') {
+    page = <CalculateOrdersPricePage language={language} />;
+  } else if (pathname === '/order-detail') {
+    page = <OrderDetailPage language={language} />;
+  } else if (pathname === '/delivery-network') {
+    page = <DeliveryNetworkPage language={language} />;
+  } else if (pathname === '/driver-dashboard') {
+    page = <DriverDashboardPage language={language} />;
+  } else if (pathname === '/available-orders') {
+    page = <AvailableOrdersPage language={language} />;
+  } else if (pathname === '/my-deliveries') {
+    page = <MyDeliveriesPage language={language} />;
+  } else if (pathname === '/delivery-order-detail') {
+    page = <DeliveryOrderDetailPage language={language} />;
+  } else if (pathname === '/delivery-requests') {
+    page = <DeliveryRequestsPage language={language} />;
+  } else if (pathname === '/support') {
+    page = <SupportPage language={language} />;
+  } else {
+    page = <HomePage language={language} />;
   }
 
-  if (pathname === '/auth/sign-in') {
-    return <SignInPage language={language} />;
-  }
-
-  if (pathname === '/auth/sign-up') {
-    return <SignUpPage language={language} />;
-  }
-
-  if (pathname === '/reset-password') {
-    return <ResetPasswordPage language={language} />;
-  }
-
-  if (pathname === '/dashboard') {
-    return <DashboardPage language={language} />;
-  }
-
-  return <HomePage language={language} />;
+  return (
+    <>
+      {page}
+      <ConfirmDialog />
+    </>
+  );
 }
 
 export default App;

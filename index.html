@@ -2,9 +2,11 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <link rel="icon" href="/assets/favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#f97316" />
+    <meta name="theme-color" content="#08111f" />
+    <meta name="msapplication-navbutton-color" content="#08111f" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="#08111f" />
+    <link rel="icon" href="/assets/favicon.png" />
     <meta
       name="description"
       content="Order and pick up food for your family and friends"
@@ -16,6 +18,18 @@
     -->
     <link rel="manifest" href="/manifest.json" />
     <title>Food Order</title>
+    <!-- Inline styles to prevent white screen - loads before CSS -->
+    <style>
+      body {
+        background-color: #08111f !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        min-height: 100vh;
+      }
+      #root {
+        min-height: 100vh;
+      }
+    </style>
     <script>
       // Aggressive service worker cleanup to prevent white screen issues
       if ('serviceWorker' in navigator) {

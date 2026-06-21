@@ -1,217 +1,242 @@
-# 🍔 Food Order
+# Food Order Application
 
-A modern food ordering web application built with React, Vite, and Supabase. Features user authentication, multi-language support (English/Arabic), and Progressive Web App (PWA) capabilities.
+A modern food ordering application with AI-powered order parsing, multi-language support (English/Arabic), and role-based access for customers and delivery drivers.
 
-## 🚀 Features
+## Features
 
-### Current Features
-- **User Authentication**: Sign up, sign in, password reset
-- **User Roles**: Customer and Delivery account types
-- **Multi-language Support**: English and Arabic with RTL support
-- **User Dashboard**: Profile management with role-based views
-- **Database Integration**: Supabase profiles table for user data
-- **PWA Support**: Installable as a desktop/mobile app
-- **Responsive Design**: Works on all device sizes
-- **Real-time Updates**: Powered by Supabase real-time database
+### For Customers
+- **Create Orders**: Create food orders with items, quantities, prices, and delivery preferences
+- **AI Order Parsing**: Use natural language to describe orders (e.g., "2 shawarma without garlic") and let AI extract the details
+- **Edit Orders**: Modify pending orders before delivery
+- **Track Orders**: View order status and delivery progress
+- **Profile Management**: Update profile, avatar, and password
+- **Delivery Network**: Connect with trusted delivery drivers
+- **Multi-language Support**: Full English and Arabic interface
 
-### Coming Soon
-- Restaurant browsing and menu display
-- Shopping cart functionality
-- Order placement and tracking
-- Payment integration
-- Delivery driver dashboard
-- Order history and favorites
+### For Delivery Drivers
+- **View Available Orders**: Browse and accept delivery requests from customers
+- **Manage Deliveries**: Track assigned deliveries and update status
+- **Customer Network**: Connect with customers for future orders
+- **Profile Management**: Update profile, avatar, and password
+- **Order Detail View**: View detailed order information including items and delivery address
 
-## 🛠️ Tech Stack
+### AI Integration
+- **Groq Llama 3.1**: Advanced natural language processing for order parsing
+- **Smart Extraction**: Extracts items, quantities, notes, and recommended delivery places
+- **Libyan Arabic Support**: Understands Libyan dialect and common expressions
+- **Rate Limiting**: 10 requests per minute per user
+- **Secure Authentication**: Supabase JWT verification with customer role check
 
-- **Frontend**: React 18, Vite 8
-- **Backend**: Supabase (Authentication, Database, Real-time)
-- **Database**: PostgreSQL with Row Level Security
-- **Styling**: CSS with modern design system
-- **PWA**: Service Worker, Web App Manifest
-- **Language**: JavaScript (ES6+)
+## Tech Stack
 
-## 📋 Prerequisites
+### Frontend
+- **React 18**: UI framework
+- **Vite**: Build tool and development server
+- **Supabase**: Authentication, database, and storage
+- **Cloudflare Turnstile**: CAPTCHA verification
+- **CSS Modules**: Component styling
 
-- Node.js 18+ and npm/yarn
-- Supabase account and project
-- Modern web browser
+### Backend (Separate Project)
+- **Express.js**: API server
+- **Groq API**: AI model integration
+- **Supabase**: Authentication and database
+- **express-rate-limit**: Rate limiting middleware
 
-## 🔧 Installation
+### Database
+- **Supabase PostgreSQL**: Managed PostgreSQL database
+- **Tables**: profiles, orders, order_items, delivery_links, delivery_requests
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js 18 or higher
+- npm or yarn
+- Supabase account
+- Groq API key (for AI server)
+
+### Installation
 
 1. **Clone the repository**
-```bash
-git clone https://github.com/com-saifdev-ly/food-order.git
-cd food-order
-```
+   ```bash
+   git clone https://github.com/YOUR_USERNAME/food-order.git
+   cd food-order
+   ```
 
 2. **Install dependencies**
-```bash
-npm install
-```
+   ```bash
+   npm install
+   ```
 
 3. **Set up environment variables**
-Create a `.env` file in the root directory:
-```env
-VITE_SUPABASE_URL=your_supabase_project_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-```
+   ```bash
+   cp .env.example .env
+   ```
+   
+   Edit `.env` and add:
+   ```bash
+   VITE_SUPABASE_URL=your_supabase_project_url
+   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+   VITE_AI_SERVER_URL=https://food-order-ai-server.onrender.com
+   ```
 
 4. **Set up Supabase database**
-Run the SQL script in `supabase/setup_profiles.sql` in your Supabase SQL Editor.
+   
+   Run the SQL migration files in order:
+   - `supabase/setup_profiles.sql`
+   - `supabase/setup_notifications.sql`
+   - `supabase/update_quantity_to_decimal.sql` (for decimal quantity support)
 
-5. **Configure Supabase**
-- Go to Authentication > URL Configuration in your Supabase dashboard
-- Set Site URL to your frontend URL
-- Add your domain to Redirect URLs
-- Configure email templates if desired
+   Use the Supabase SQL Editor to run these migrations.
 
-6. **Start the development server**
-```bash
-npm start
+5. **Start the development server**
+   ```bash
+   npm start
+   ```
+
+6. **Open in browser**
+   ```
+   http://localhost:3001
+   ```
+
+## Project Structure
+
+```
+food-order/
+├── public/              # Static assets
+├── src/
+│   ├── components/      # Reusable UI components
+│   ├── lib/            # Utility functions and configurations
+│   │   ├── ai.js       # AI integration
+│   │   ├── database.js # Database operations
+│   │   ├── i18n.js     # Internationalization
+│   │   ├── profile.js  # Profile management
+│   │   ├── supabase.js # Supabase client
+│   │   └── ...
+│   ├── pages/          # Page components
+│   │   ├── CreateOrderPage.jsx
+│   │   ├── EditOrderPage.jsx
+│   │   ├── OrdersPage.jsx
+│   │   ├── CustomerDashboardPage.jsx
+│   │   ├── DriverDashboardPage.jsx
+│   │   └── ...
+│   ├── App.jsx         # Main app component
+│   ├── index.jsx       # Entry point
+│   └── App.css         # Global styles
+├── supabase/           # SQL migration files
+├── package.json
+└── vite.config.js
 ```
 
-The app will be available at `http://localhost:3001`
+## Environment Variables
 
-## 📱 Available Scripts
+| Variable | Description |
+|----------|-------------|
+| `VITE_SUPABASE_URL` | Your Supabase project URL |
+| `VITE_SUPABASE_ANON_KEY` | Your Supabase anonymous key |
+| `VITE_AI_SERVER_URL` | Deployed AI server URL |
+
+## Database Schema
+
+### Tables
+
+- **profiles**: User profiles with roles (customer/delivery)
+- **orders**: Order records with status and delivery information
+- **order_items**: Individual items in orders with quantities and prices
+- **delivery_links**: Direct connections between customers and delivery drivers
+- **delivery_requests**: Delivery request records
+
+### Important Notes
+
+- `quantity` column in `order_items` is of type `numeric` to support decimal values (0.25, 0.5, etc.)
+- Minimum quantity is 0.25 with 0.05 increments
+- Status transitions: `pending` → `collected` → `delivered` or `cancelled`
+
+## Deployment
+
+### Frontend Deployment
+
+The frontend can be deployed to:
+- Vercel
+- Netlify
+- GitHub Pages
+- Any static hosting service
+
+**Steps for Vercel:**
+
+1. Connect your GitHub repository to Vercel
+2. Add environment variables in Vercel dashboard
+3. Deploy automatically on push
+
+### AI Server Deployment
+
+The AI server is in a separate repository: `food-order-ai-server`
+
+See [AI Server Deployment Guide](../food-order-ai-server/SETUP_GUIDE.md) for details.
+
+## AI Server Setup
+
+The AI server provides:
+- `/parse-order` endpoint for natural language order parsing
+- JWT authentication with Supabase
+- Rate limiting (10 req/min)
+- Customer role verification
+
+**Deployed URL**: `https://food-order-ai-server.onrender.com`
+
+## Security
+
+- JWT authentication for all protected routes
+- Role-based access control (customer/delivery)
+- CAPTCHA verification for sensitive operations
+- Rate limiting on AI endpoint
+- Environment variables for sensitive data
+- Service role key only on server-side
+
+## Multi-language Support
+
+The application supports:
+- English (en)
+- Arabic (ar)
+
+Language is determined by URL parameter: `?lang=en` or `?lang=ar`
+
+## Troubleshooting
+
+### AI parsing not working
+- Check `VITE_AI_SERVER_URL` is set correctly
+- Verify AI server is deployed and running
+- Check user is authenticated and has customer role
+
+### Quantity field errors
+- Ensure database migration `update_quantity_to_decimal.sql` is run
+- Verify quantity column is `numeric` type in database
+
+### Authentication issues
+- Check Supabase URL and anon key are correct
+- Verify user role is set correctly in profiles table
+- Check JWT token is valid and not expired
+
+## Development
+
+### Available Scripts
 
 - `npm start` - Start development server
 - `npm run build` - Build for production
 - `npm run preview` - Preview production build
 - `npm test` - Run tests
 
-## 🗄️ Database Schema
+### Code Style
 
-### Profiles Table
-```sql
-CREATE TABLE public.profiles (
-  id uuid references auth.users(id),
-  full_name text,
-  role user_role (customer/delivery),
-  avatar_url text,
-  email varchar,
-  created_at timestamp
-);
-```
+- React functional components with hooks
+- Modular CSS with CSS variables
+- Separation of concerns (components, utilities, pages)
+- Environment-based configuration
 
-**Benefits of database table over metadata:**
-- SQL query capabilities
-- Data relationships with other tables
-- Performance with indexes
-- Better scalability
-- Analytics and reporting
+## License
 
-See `supabase/setup_profiles.sql` for complete setup including RLS policies and triggers.
+ISC
 
-## 🌐 Deployment
+## Support
 
-### Environment Variables
-Ensure these are set in your deployment environment:
-- `VITE_SUPABASE_URL`
-- `VITE_SUPABASE_ANON_KEY`
-
-### Deployment Platforms
-- **Vercel**: Recommended for React apps
-- **Netlify**: Easy setup with git integration
-- **AWS Amplify**: Full AWS integration
-
-### Supabase Configuration
-- Site URL: Your production domain
-- Redirect URLs: Add your domain(s)
-- Email templates: Customize as needed
-
-## 🎨 Customization
-
-### Branding
-See `ASSETS_GUIDE.md` for adding custom logos and icons:
-- Shopping cart emoji 🛒 at `/assets/logo.svg`
-- App icons in SVG format (scalable)
-- Conversion instructions for PNG format if needed
-
-### Colors
-Primary theme colors:
-- Primary: `#f97316` (Orange)
-- Background: `#0f172a` (Dark Blue)
-- Text: `#eff6ff` (Light)
-
-## 📄 Project Structure
-
-```
-food-order/
-├── public/           # Static assets
-│   └── assets/       # Logo and favicon files
-├── src/
-│   ├── components/   # Reusable components
-│   ├── lib/         # Utilities and helpers
-│   │   ├── profile.js  # Database operations
-│   │   └── supabase.js  # Supabase client
-│   ├── pages/       # Page components
-│   ├── App.jsx      # Main app component
-│   └── App.css      # Global styles
-├── supabase/        # Database setup scripts
-└── package.json
-```
-
-## 🔐 Security
-
-- Row Level Security (RLS) on profiles table
-- Users can only access their own data
-- Database triggers for automatic profile creation
-- Environment variables for sensitive data
-- Secure authentication flow with Supabase
-- Input validation on all forms
-
-## 🌍 Internationalization
-
-Supported languages:
-- English (en)
-- Arabic (ar) with RTL support
-
-Add new languages in `src/lib/i18n.js`
-
-## 🤝 Contributing
-
-Contributions are welcome! Please follow these steps:
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Open a Pull Request
-
-## 📝 License
-
-This project is licensed under the MIT License.
-
-## 👥 Authors
-
-- **Saif Khalifa** - *Initial development*
-
-## 🙏 Acknowledgments
-
-- Supabase for the excellent backend services
-- Vite for the fast development experience
-- React community for the amazing ecosystem
-
-## 📞 Support
-
-For issues and questions:
-- Open an issue on GitHub
-- Check the documentation in `SUPABASE_SETUP.md`
-- Review the assets guide in `ASSETS_GUIDE.md`
-
-## 🔮 Roadmap
-
-- [ ] Restaurant management system
-- [ ] Menu and food item display
-- [ ] Shopping cart functionality
-- [ ] Order placement and processing
-- [ ] Payment gateway integration
-- [ ] Delivery driver dashboard
-- [ ] Real-time order tracking
-- [ ] User reviews and ratings
-- [ ] Advanced search and filtering
-- [ ] Admin dashboard
-
----
-
-Built with ❤️ for food lovers everywhere
+For issues and questions, open an issue in the GitHub repository.
