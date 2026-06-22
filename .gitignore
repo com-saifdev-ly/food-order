@@ -151,3 +151,13 @@ dist
 # IDE specific files
 .vscode/
 .idea/
+
+# Skills
+skills-lock.json
+
+
+# Guid
+PROJECT.md
+ASSETS_GUIDE.md
+NOTIFICATION_SYSTEM.md
+SUPABASE_SETUP.md
