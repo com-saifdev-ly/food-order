@@ -126,9 +126,9 @@ function HomePage({ language }) {
         </div>
 
         <div className="Action-row">
-          <button 
-            type="button" 
-            className="Primary-btn" 
+          <button
+            type="button"
+            className="Primary-btn"
             onClick={() => setShowDownloads(!showDownloads)}
           >
             {copy.downloadApp}
@@ -137,11 +137,25 @@ function HomePage({ language }) {
 
         {showDownloads && (
           <div className="Download-grid">
-            {copy.platforms.map((platform) => (
-              <button key={platform} type="button" className="Download-btn" onClick={(event) => event.preventDefault()}>
-                {platform}
-              </button>
-            ))}
+            <a className="Download-btn" href="https://github.com/com-saifdev-ly/food-order/releases/latest/download/FoodOrder-windows-setup.exe" aria-label="Windows">
+              <i className="fa-brands fa-windows"></i>
+            </a>
+
+            <a className="Download-btn" href="/" aria-label="macOS">
+              <i className="fa-brands fa-apple"></i>
+            </a>
+
+            <a className="Download-btn" href="/" aria-label="Linux">
+              <i className="fa-brands fa-linux"></i>
+            </a>
+
+            <a className="Download-btn" href="https://github.com/com-saifdev-ly/food-order/releases/latest/download/FoodOrder-android.apk" aria-label="Android">
+              <i className="fa-brands fa-android"></i>
+            </a>
+
+            <a className="Download-btn" href="/" aria-label="iPhone / iPad">
+              <i className="fa-brands fa-app-store-ios"></i>
+            </a>
           </div>
         )}
       </section>
@@ -157,7 +171,7 @@ function App() {
   // Immediate redirect for authenticated users - no rendering at all
   if (!authLoading && session) {
     const userRole = session.user.user_metadata?.role || 'customer';
-    
+
     // Only redirect if on home page or auth pages
     if (pathname === '/' || pathname.startsWith('/auth/') || pathname === '/reset-password') {
       const redirectPath = userRole === 'delivery'
@@ -174,17 +188,17 @@ function App() {
   }
 
   // Check if current path is an auth page - allow these even if authenticated
-  const isAuthPage = pathname === '/auth/sign-in' || 
-                    pathname === '/auth/sign-up' || 
-                    pathname === '/auth/callback' ||
-                    pathname === '/reset-password' ||
-                    pathname === '/auth/reset-password-request';
+  const isAuthPage = pathname === '/auth/sign-in' ||
+    pathname === '/auth/sign-up' ||
+    pathname === '/auth/callback' ||
+    pathname === '/reset-password' ||
+    pathname === '/auth/reset-password-request';
 
   // Redirect authenticated users away from auth pages (without profile check for speed)
   if (session && isAuthPage && pathname !== '/auth/callback') {
     // Use basic role from metadata for immediate redirect
     const userRole = session.user.user_metadata?.role || 'customer';
-    const redirectPath = userRole === 'delivery' 
+    const redirectPath = userRole === 'delivery'
       ? getLocalizedPath('/driver-dashboard', language)
       : getLocalizedPath('/customer-dashboard', language);
     window.location.href = redirectPath;

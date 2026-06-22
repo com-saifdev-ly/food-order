@@ -115,6 +115,16 @@ dist
 
 # production
 /build
+/.agents
+/.devcontainer
+/android
+/ios
+/src-tauri
+/supabase
+
+capacitor.config.json
+
+
 
 # misc
 .DS_Store
