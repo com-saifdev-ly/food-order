@@ -27,6 +27,7 @@ import { supabase } from './lib/supabase';
 import { useAuthSession } from './lib/useAuthSession';
 import { getProfileWithFallback } from './lib/profile';
 import { ConfirmDialog } from './components/ConfirmDialog';
+import { getUpdateLinks } from "./lib/update";
 
 
 export { getLanguage } from './lib/i18n';
@@ -110,6 +111,16 @@ function HomePage({ language }) {
   const copy = translations[language];
   const [showDownloads, setShowDownloads] = useState(false);
 
+  async function handleWindowsDownload() {
+    const links = await getUpdateLinks();
+    window.location.href = links.windows;
+  }
+
+  async function handleAndroidDownload() {
+    const links = await getUpdateLinks();
+    window.location.href = links.android;
+  }
+
   return (
     <PageShell language={language}>
       <section className="Hero-card">
@@ -136,24 +147,47 @@ function HomePage({ language }) {
         </div>
 
         {showDownloads && (
+
           <div className="Download-grid">
-            <a className="Download-btn" href="https://github.com/com-saifdev-ly/food-order/releases/latest/download/FoodOrder-windows-setup.exe" aria-label="Windows">
+            <a
+              className="Download-btn"
+              href="#"
+              onClick={handleWindowsDownload}
+              aria-label="Windows"
+            >
               <i className="fa-brands fa-windows"></i>
             </a>
 
-            <a className="Download-btn" href="/" aria-label="macOS">
+            <a
+              className="Download-btn"
+              href="#"
+              aria-label="macOS"
+            >
               <i className="fa-brands fa-apple"></i>
             </a>
 
-            <a className="Download-btn" href="/" aria-label="Linux">
+            <a
+              className="Download-btn"
+              href="#"
+              aria-label="Linux"
+            >
               <i className="fa-brands fa-linux"></i>
             </a>
 
-            <a className="Download-btn" href="https://github.com/com-saifdev-ly/food-order/releases/latest/download/FoodOrder-android.apk" aria-label="Android">
+            <a
+              className="Download-btn"
+              href="#"
+              onClick={handleAndroidDownload}
+              aria-label="Android"
+            >
               <i className="fa-brands fa-android"></i>
             </a>
 
-            <a className="Download-btn" href="/" aria-label="iPhone / iPad">
+            <a
+              className="Download-btn"
+              href="#"
+              aria-label="iPhone / iPad"
+            >
               <i className="fa-brands fa-app-store-ios"></i>
             </a>
           </div>
