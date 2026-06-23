@@ -358,15 +358,15 @@ export default function DeliveryNetworkPage({ language }) {
                     <div className="Delivery-item-avatar">
                       <img 
                         src={avatarUrl}
-                        alt={link.delivery_profile.full_name}
+                        alt={link.delivery_profile?.full_name || 'Driver'}
                         className="Delivery-avatar-small"
                         onError={(e) => {
                           e.target.src = '/assets/user.svg';
                         }}
                       />
                       <div className="Delivery-info">
-                        <h3>{link.delivery_profile.full_name}</h3>
-                        <p>{link.delivery_profile.email}</p>
+                        <h3>{link.delivery_profile?.full_name || 'Unknown'}</h3>
+                        <p>{link.delivery_profile?.email || 'No email'}</p>
                         <span className="Delivery-status" style={{ color: statusColor }}>
                           {status}
                         </span>

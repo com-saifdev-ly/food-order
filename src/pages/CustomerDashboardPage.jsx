@@ -525,10 +525,10 @@ export default function CustomerDashboardPage({ language }) {
                     <div className="Delivery-item-avatar">
                       <Avatar 
                         src={avatarUrl} 
-                        alt={link.delivery_profile.full_name} 
+                        alt={link.delivery_profile?.full_name || 'Driver'} 
                         size="small"
                       />
-                      <span>{link.delivery_profile.full_name} ({link.delivery_profile.email})</span>
+                      <span>{link.delivery_profile?.full_name || 'Unknown'} ({link.delivery_profile?.email || 'No email'})</span>
                     </div>
                     <span className="Delivery-status" style={{ color: statusColor }}>
                       {statusText}

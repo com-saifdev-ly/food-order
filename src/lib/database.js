@@ -628,20 +628,25 @@ export async function markNotificationAsRead(notificationId) {
   }
 }
 
-export async function createNotification(userId, title, body) {
+export async function createNotification(userId, title, body, data = {}, language = 'en') {
   try {
-    const { data, error } = await supabase
+    const { data: notification, error } = await supabase
       .from('notifications')
       .insert({
         user_id: userId,
         title: title,
         body: body,
+        data: { ...data, language },
       })
       .select()
       .single();
 
     if (error) throw error;
-    return data;
+
+    // Push notifications are now handled by the trigger-based system (usePushNotificationTrigger.js)
+    // The old direct call system has been disabled to prevent conflicts and duplicate notifications
+
+    return notification;
   } catch (error) {
     throw error;('Error creating notification:', error);
     throw error;

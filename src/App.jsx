@@ -28,6 +28,8 @@ import { useAuthSession } from './lib/useAuthSession';
 import { getProfileWithFallback } from './lib/profile';
 import { ConfirmDialog } from './components/ConfirmDialog';
 import { getUpdateLinks } from "./lib/update";
+import { usePushNotifications } from './lib/usePushNotifications';
+import { usePushNotificationTrigger } from './lib/usePushNotificationTrigger';
 
 
 export { getLanguage } from './lib/i18n';
@@ -202,12 +204,18 @@ function App() {
   const { session, loading: authLoading } = useAuthSession();
   const { pathname } = window.location;
 
+  // Initialize push notifications for authenticated users
+  usePushNotifications(session?.user?.id);
+
+  // Listen to notification inserts and send push notifications
+  usePushNotificationTrigger();
+
   // Immediate redirect for authenticated users - no rendering at all
   if (!authLoading && session) {
     const userRole = session.user.user_metadata?.role || 'customer';
 
-    // Only redirect if on home page or auth pages
-    if (pathname === '/' || pathname.startsWith('/auth/') || pathname === '/reset-password') {
+    // Only redirect if on home page or auth pages (except callback and reset-password)
+    if (pathname === '/' || (pathname.startsWith('/auth/') && pathname !== '/auth/callback')) {
       const redirectPath = userRole === 'delivery'
         ? getLocalizedPath('/driver-dashboard', language)
         : getLocalizedPath('/customer-dashboard', language);
@@ -229,7 +237,8 @@ function App() {
     pathname === '/auth/reset-password-request';
 
   // Redirect authenticated users away from auth pages (without profile check for speed)
-  if (session && isAuthPage && pathname !== '/auth/callback') {
+  // But allow callback and reset-password pages to show their content
+  if (session && isAuthPage && pathname !== '/auth/callback' && pathname !== '/reset-password') {
     // Use basic role from metadata for immediate redirect
     const userRole = session.user.user_metadata?.role || 'customer';
     const redirectPath = userRole === 'delivery'
@@ -286,20 +295,6 @@ function App() {
       <ConfirmDialog />
     </>
   );
-
-  if (pathname === '/auth/sign-in') {
-    return <SignInPage language={language} />;
-  }
-
-  if (pathname === '/auth/sign-up') {
-    return <SignUpPage language={language} />;
-  }
-
-  if (pathname === '/reset-password') {
-    return <ResetPasswordPage language={language} />;
-  }
-
-  return <HomePage language={language} />;
 }
 
 export default App;

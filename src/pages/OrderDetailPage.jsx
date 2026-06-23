@@ -6,12 +6,14 @@ import { useAuthSession } from '../lib/useAuthSession';
 import { getCustomerOrder, cancelOrder, deleteOrderItem, getUserProfile } from '../lib/database';
 import { showConfirmDialog } from '../components/ConfirmDialog';
 import { getProfileWithFallback, getProfileAvatarUrl } from '../lib/profile';
+import { useOrderRealtime } from '../lib/useOrderRealtime';
 
 export default function OrderDetailPage({ language }) {
   const copy = translations[language];
   const { session, loading: authLoading } = useAuthSession();
   const [profile, setProfile] = useState(null);
   const [order, setOrder] = useState(null);
+  const [orderItems, setOrderItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
   const [deletingItem, setDeletingItem] = useState(null);
@@ -27,6 +29,85 @@ export default function OrderDetailPage({ language }) {
   // Get order ID from URL
   const urlParams = new URLSearchParams(window.location.search);
   const orderId = urlParams.get('order');
+
+  // Realtime subscription for order updates
+  useEffect(() => {
+    if (!orderId || !session) return;
+
+    const orderChannel = supabase
+      .channel(`order:${orderId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'orders',
+          filter: `id=eq.${orderId}`
+        },
+        (payload) => {
+          console.log('Order realtime update:', payload);
+          // Merge the update with existing order data to preserve related fields
+          setOrder(prevOrder => ({
+            ...prevOrder,
+            ...payload.new,
+            // Preserve related data that isn't included in the realtime update
+            customer_profile: prevOrder?.customer_profile || payload.new.customer_profile,
+            delivery_profile: prevOrder?.delivery_profile || payload.new.delivery_profile,
+            order_items: prevOrder?.order_items || payload.new.order_items
+          }));
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'order_items',
+          filter: `order_id=eq.${orderId}`
+        },
+        (payload) => {
+          console.log('Order item inserted:', payload);
+          setOrderItems(prev => [...prev, payload.new]);
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'order_items',
+          filter: `order_id=eq.${orderId}`
+        },
+        (payload) => {
+          console.log('Order item updated:', payload);
+          setOrderItems(prev =>
+            prev.map(item =>
+              item.id === payload.new.id ? payload.new : item
+            )
+          );
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'order_items',
+          filter: `order_id=eq.${orderId}`
+        },
+        (payload) => {
+          console.log('Order item deleted:', payload);
+          setOrderItems(prev =>
+            prev.filter(item => item.id !== payload.old.id)
+          );
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(orderChannel);
+    };
+  }, [orderId, session]);
 
   useEffect(() => {
     async function loadData() {
@@ -81,6 +162,14 @@ export default function OrderDetailPage({ language }) {
         }
 
         setOrder(orderData);
+
+        // Fetch order items
+        const { data: itemsData } = await supabase
+          .from('order_items')
+          .select('*')
+          .eq('order_id', orderId)
+          .order('created_at', { ascending: true });
+        setOrderItems(itemsData || []);
 
         // Load delivery avatar
         if (orderData.delivery_id) {
@@ -346,7 +435,7 @@ export default function OrderDetailPage({ language }) {
               <span className="Order-delivery-info">
                 <img 
                   src={deliveryAvatar} 
-                  alt={order.delivery_profile.full_name} 
+                  alt={order.delivery_profile?.full_name || 'Driver'} 
                   className="Delivery-avatar-small"
                   onError={(e) => {
                     console.error('Avatar load error, using fallback:', e.target.src);
@@ -375,7 +464,7 @@ export default function OrderDetailPage({ language }) {
                     Retry
                   </button>
                 )}
-                {order.delivery_profile.full_name} ({order.delivery_profile.email})
+                {order.delivery_profile?.full_name || 'Unknown'} ({order.delivery_profile?.email || 'No email'})
               </span>
             </p>
           )}
@@ -413,7 +502,7 @@ export default function OrderDetailPage({ language }) {
               <button 
                 type="button"
                 className="Primary-btn"
-                onClick={() => window.location.href = getLocalizedPath('/edit-order', language) + `&id=${order.id}`}
+                onClick={() => window.location.href = getLocalizedPath('/edit-order', language) + `&id=${order.id}&source=order-detail`}
               >
                 {copy.edit}
               </button>

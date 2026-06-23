@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import PageShell from '../components/PageShell';
 import { getLocalizedPath, translations } from '../lib/i18n';
 import { supabase } from '../lib/supabase';
+import TurnstileWidget from '../components/TurnstileWidget';
 
 export default function ResetPasswordPage({ language }) {
   const copy = translations[language];
@@ -11,6 +12,27 @@ export default function ResetPasswordPage({ language }) {
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [validToken, setValidToken] = useState(false);
+  const [completed, setCompleted] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState('');
+  const [turnstileError, setTurnstileError] = useState(false);
+  const [turnstileResetTrigger, setTurnstileResetTrigger] = useState(0);
+
+  // Password requirements validation
+  const passwordRequirements = {
+    minLength: password.length >= 8,
+    lowercase: /[a-z]/.test(password),
+    uppercase: /[A-Z]/.test(password),
+    digit: /\d/.test(password),
+    symbol: /[!@#$%^&*(),.?":{}|<>]/.test(password),
+  };
+
+  const isPasswordValid = Object.values(passwordRequirements).every(Boolean);
+
+  function sanitizePassword(value) {
+    // Only allow: a-z, A-Z, 0-9, and common special characters
+    // Remove spaces, Arabic characters, and other Unicode
+    return value.replace(/[^a-zA-Z0-9!@#$%^&*(),.?":{}|<>]/g, '');
+  }
 
   useEffect(() => {
     async function checkToken() {
@@ -51,13 +73,23 @@ export default function ResetPasswordPage({ language }) {
     event.preventDefault();
     setError('');
 
-    if (password.length < 6) {
+    if (password.length < 8) {
+      setError(copy.passwordTooShort);
+      return;
+    }
+
+    if (!isPasswordValid) {
       setError(copy.passwordTooShort);
       return;
     }
 
     if (password !== confirmPassword) {
       setError(copy.passwordMismatch);
+      return;
+    }
+
+    if (!turnstileToken) {
+      setError(copy.captchaVerificationFailed);
       return;
     }
 
@@ -70,11 +102,15 @@ export default function ResetPasswordPage({ language }) {
     if (updateError) {
       setError(updateError.message);
       setSubmitting(false);
+      // Reset Turnstile to allow new attempt
+      setTurnstileToken('');
+      setTurnstileResetTrigger(prev => prev + 1);
       return;
     }
 
-    // Password updated successfully, redirect to sign in
-    window.location.href = getLocalizedPath('/auth/sign-in', language);
+    // Password updated successfully
+    setSubmitting(false);
+    setCompleted(true);
   }
 
   if (loading) {
@@ -109,6 +145,29 @@ export default function ResetPasswordPage({ language }) {
     );
   }
 
+  if (completed) {
+    return (
+      <PageShell language={language}>
+        <section className="Hero-card Auth-card Callback-card Callback-card--success">
+
+          <h1>{copy.passwordUpdatedTitle}</h1>
+          <p className="Auth-message">
+            {copy.passwordUpdated}
+          </p>
+
+          <div className="Action-row">
+            <a className="Primary-btn" href={getLocalizedPath('/auth/sign-in', language)}>
+              {copy.signIn}
+            </a>
+            <a className="Secondary-link" href={getLocalizedPath('/', language)}>
+              {copy.backHome}
+            </a>
+          </div>
+        </section>
+      </PageShell>
+    );
+  }
+
   return (
     <PageShell language={language}>
       <section className="Hero-card Auth-card">
@@ -118,35 +177,96 @@ export default function ResetPasswordPage({ language }) {
 
         <form className="Auth-form" onSubmit={handleSubmit}>
           <label className="Auth-field">
-            <span>{copy.passwordLabel}</span>
+            <span>{copy.passwordLabel} <span className="Auth-field-hint">({copy.passwordMinLength})</span></span>
             <input
               type="password"
               name="password"
               autoComplete="new-password"
               required
-              minLength={6}
+              minLength={8}
               value={password}
-              onChange={(event) => setPassword(event.target.value)}
+              onChange={(event) => setPassword(sanitizePassword(event.target.value))}
             />
+            {password.length > 0 && (
+              <div className="Password-requirements">
+                <div className={`Password-requirement ${passwordRequirements.minLength ? 'valid' : 'invalid'}`}>
+                  <span className="Password-requirement-icon">
+                    {passwordRequirements.minLength ? '✓' : '✗'}
+                  </span>
+                  {copy.passwordRequirementMinLength}
+                </div>
+                <div className={`Password-requirement ${passwordRequirements.lowercase ? 'valid' : 'invalid'}`}>
+                  <span className="Password-requirement-icon">
+                    {passwordRequirements.lowercase ? '✓' : '✗'}
+                  </span>
+                  {copy.passwordRequirementLowercase}
+                </div>
+                <div className={`Password-requirement ${passwordRequirements.uppercase ? 'valid' : 'invalid'}`}>
+                  <span className="Password-requirement-icon">
+                    {passwordRequirements.uppercase ? '✓' : '✗'}
+                  </span>
+                  {copy.passwordRequirementUppercase}
+                </div>
+                <div className={`Password-requirement ${passwordRequirements.digit ? 'valid' : 'invalid'}`}>
+                  <span className="Password-requirement-icon">
+                    {passwordRequirements.digit ? '✓' : '✗'}
+                  </span>
+                  {copy.passwordRequirementDigit}
+                </div>
+                <div className={`Password-requirement ${passwordRequirements.symbol ? 'valid' : 'invalid'}`}>
+                  <span className="Password-requirement-icon">
+                    {passwordRequirements.symbol ? '✓' : '✗'}
+                  </span>
+                  {copy.passwordRequirementSymbol}
+                </div>
+              </div>
+            )}
           </label>
 
           <label className="Auth-field">
-            <span>{copy.confirmPasswordLabel}</span>
+            <span>{copy.confirmPasswordLabel} <span className="Auth-field-hint">({copy.passwordMinLength})</span></span>
             <input
               type="password"
               name="confirmPassword"
               autoComplete="new-password"
               required
-              minLength={6}
+              minLength={8}
               value={confirmPassword}
-              onChange={(event) => setConfirmPassword(event.target.value)}
+              onChange={(event) => setConfirmPassword(sanitizePassword(event.target.value))}
             />
+            {confirmPassword.length > 0 && password !== confirmPassword && (
+              <p className="Auth-field-error">{copy.passwordMismatch}</p>
+            )}
           </label>
 
+          <div className="Auth-field">
+            <TurnstileWidget
+              language={language}
+              resetTrigger={turnstileResetTrigger}
+              onVerify={(token) => {
+                setTurnstileToken(token);
+                setTurnstileError(false);
+              }}
+              onExpire={() => {
+                setTurnstileToken('');
+                setTurnstileError(false);
+              }}
+              onError={() => {
+                setTurnstileToken('');
+                setTurnstileError(true);
+              }}
+            />
+          </div>
+
+          {turnstileError && <p className="Auth-error" role="alert">{copy.captchaVerificationFailed}</p>}
           {error ? <p className="Auth-error" role="alert">{error}</p> : null}
 
           <div className="Action-row">
-            <button type="submit" className="Primary-btn" disabled={submitting}>
+            <button
+              type="submit"
+              className="Primary-btn"
+              disabled={submitting || !turnstileToken}
+            >
               {submitting ? copy.updatingPassword : copy.updatePassword}
             </button>
           </div>

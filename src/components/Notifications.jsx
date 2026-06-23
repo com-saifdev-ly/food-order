@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { translations, translateStatus } from '../lib/i18n';
+import { translations, translateStatus, getLocalizedPath } from '../lib/i18n';
 
 export function NotificationBell({ unreadCount, onClick, language = 'en' }) {
   const copy = translations[language];
@@ -58,14 +58,14 @@ export function NotificationDropdown({
       console.error('Failed to mark notification as read:', error);
       // Continue with navigation even if mark-as-read fails
     }
-    
+
     // Handle navigation based on notification type and user role
     if (notification.type === 'delivery_request_created') {
       // Delivery driver received a request - go to delivery requests page
-      window.location.href = '/delivery-requests';
+      window.location.href = getLocalizedPath('/delivery-requests', language);
     } else if (notification.type === 'delivery_request_accepted' || notification.type === 'delivery_request_rejected') {
       // Customer got response - go to delivery network page
-      window.location.href = '/delivery-network';
+      window.location.href = getLocalizedPath('/delivery-network', language);
     } else if (notification.data?.order_id) {
       const orderId = notification.data.order_id;
       // Use role-based routing to determine which detail page to show
@@ -76,7 +76,7 @@ export function NotificationDropdown({
         // If status is not pending (accepted, preparing, on_the_way, delivered), go to order detail
         const orderStatus = notification.data?.status;
         if (orderStatus === 'pending') {
-          window.location.href = `/available-orders?highlight=${orderId}`;
+          window.location.href = getLocalizedPath(`/available-orders?highlight=${orderId}`, language);
         } else if (!orderStatus) {
           // If status is not in notification data, fetch order to check
           try {
@@ -85,30 +85,30 @@ export function NotificationDropdown({
               .select('status')
               .eq('id', orderId)
               .single();
-            
+
             if (order) {
               if (order.status === 'pending') {
-                window.location.href = `/available-orders?highlight=${orderId}`;
+                window.location.href = getLocalizedPath(`/available-orders?highlight=${orderId}`, language);
               } else {
                 // Order is accepted or further in process - go to delivery order detail
-                window.location.href = `/delivery-order-detail?order=${orderId}`;
+                window.location.href = getLocalizedPath(`/delivery-order-detail?order=${orderId}`, language);
               }
             } else {
               // Order not found, default to available orders
-              window.location.href = `/available-orders?highlight=${orderId}`;
+              window.location.href = getLocalizedPath(`/available-orders?highlight=${orderId}`, language);
             }
           } catch (error) {
             console.error('Error fetching order status:', error);
             // Default to available orders on error
-            window.location.href = `/available-orders?highlight=${orderId}`;
+            window.location.href = getLocalizedPath(`/available-orders?highlight=${orderId}`, language);
           }
         } else {
           // Order is accepted or further in process - go to delivery order detail
-          window.location.href = `/delivery-order-detail?order=${orderId}`;
+          window.location.href = getLocalizedPath(`/delivery-order-detail?order=${orderId}`, language);
         }
       } else {
         // Default to customer view for both customers and unknown roles
-        window.location.href = `/order-detail?order=${orderId}`;
+        window.location.href = getLocalizedPath(`/order-detail?order=${orderId}`, language);
       }
     }
   };
@@ -226,6 +226,10 @@ function NotificationItem({ notification, onClick, onMarkAsRead, language = 'en'
       case 'item_update':
         title = copy.notificationOrderUpdated?.replace('{orderTitle}', orderTitle) || notification.title;
         body = copy.notificationItemStatusChanged?.replace('{itemName}', itemName).replace('{status}', status) || notification.body;
+        break;
+      case 'item_deleted':
+        title = copy.notificationOrderUpdated?.replace('{orderTitle}', orderTitle) || notification.title;
+        body = copy.notificationItemDeleted?.replace('{itemName}', itemName) || notification.body;
         break;
       case 'order_update':
         title = copy.notificationOrderUpdated?.replace('{orderTitle}', orderTitle) || notification.title;
@@ -371,6 +375,10 @@ export function Toast({ notification, onClose, autoCloseDelay = 10000, language 
       case 'item_update':
         title = copy.notificationOrderUpdated?.replace('{orderTitle}', orderTitle) || notification.title;
         body = copy.notificationItemStatusChanged?.replace('{itemName}', itemName).replace('{status}', status) || notification.body;
+        break;
+      case 'item_deleted':
+        title = copy.notificationOrderUpdated?.replace('{orderTitle}', orderTitle) || notification.title;
+        body = copy.notificationItemDeleted?.replace('{itemName}', itemName) || notification.body;
         break;
       case 'order_update':
         title = copy.notificationOrderUpdated?.replace('{orderTitle}', orderTitle) || notification.title;

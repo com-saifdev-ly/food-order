@@ -11,6 +11,7 @@ export default function DeliveryOrderDetailPage({ language }) {
   const { session, loading: authLoading } = useAuthSession();
   const [profile, setProfile] = useState(null);
   const [order, setOrder] = useState(null);
+  const [orderItems, setOrderItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [collecting, setCollecting] = useState({});
@@ -29,6 +30,85 @@ export default function DeliveryOrderDetailPage({ language }) {
   // Get order ID from URL
   const urlParams = new URLSearchParams(window.location.search);
   const orderId = urlParams.get('order');
+
+  // Realtime subscription for order updates
+  useEffect(() => {
+    if (!orderId || !session) return;
+
+    const orderChannel = supabase
+      .channel(`delivery-order:${orderId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'orders',
+          filter: `id=eq.${orderId}`
+        },
+        (payload) => {
+          console.log('Delivery order realtime update:', payload);
+          // Merge the update with existing order data to preserve related fields
+          setOrder(prevOrder => ({
+            ...prevOrder,
+            ...payload.new,
+            // Preserve related data that isn't included in the realtime update
+            customer_profile: prevOrder?.customer_profile || payload.new.customer_profile,
+            delivery_profile: prevOrder?.delivery_profile || payload.new.delivery_profile,
+            order_items: prevOrder?.order_items || payload.new.order_items
+          }));
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'order_items',
+          filter: `order_id=eq.${orderId}`
+        },
+        (payload) => {
+          console.log('Order item inserted:', payload);
+          setOrderItems(prev => [...prev, payload.new]);
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'order_items',
+          filter: `order_id=eq.${orderId}`
+        },
+        (payload) => {
+          console.log('Order item updated:', payload);
+          setOrderItems(prev =>
+            prev.map(item =>
+              item.id === payload.new.id ? payload.new : item
+            )
+          );
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'order_items',
+          filter: `order_id=eq.${orderId}`
+        },
+        (payload) => {
+          console.log('Order item deleted:', payload);
+          setOrderItems(prev =>
+            prev.filter(item => item.id !== payload.old.id)
+          );
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(orderChannel);
+    };
+  }, [orderId, session]);
 
   useEffect(() => {
     async function loadData() {
@@ -66,6 +146,14 @@ export default function DeliveryOrderDetailPage({ language }) {
         }
 
         setOrder(orderData);
+
+        // Fetch order items
+        const { data: itemsData } = await supabase
+          .from('order_items')
+          .select('*')
+          .eq('order_id', orderId)
+          .order('created_at', { ascending: true });
+        setOrderItems(itemsData || []);
 
         // Load customer avatar
         if (orderData.customer_id) {
@@ -309,13 +397,13 @@ export default function DeliveryOrderDetailPage({ language }) {
                 <span className="Order-customer-info">
                   <img 
                     src={customerAvatar}
-                    alt={order.customer_profile.full_name}
+                    alt={order.customer_profile?.full_name || 'Customer'}
                     className="Delivery-avatar-small"
                     onError={(e) => {
                       e.target.src = '/assets/user.svg';
                     }}
                   />
-                  {order.customer_profile.full_name} ({order.customer_profile.email})
+                  {order.customer_profile?.full_name || 'Unknown'} ({order.customer_profile?.email || 'No email'})
                 </span>
               </p>
               

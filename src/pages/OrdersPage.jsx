@@ -277,7 +277,7 @@ export default function OrdersPage({ language }) {
         // Use Map to automatically handle duplicates by ID
         driverMap.set(order.delivery_id, {
           id: order.delivery_id,
-          name: order.delivery_profile.full_name
+          name: order.delivery_profile?.full_name || 'Unknown Driver'
         });
       }
     });
@@ -616,13 +616,13 @@ export default function OrdersPage({ language }) {
                     <span className="Order-delivery-info">
                       <img 
                         src={deliveryAvatars[order.delivery_id] || '/assets/user.svg'}
-                        alt={order.delivery_profile.full_name}
+                        alt={order.delivery_profile?.full_name || 'Driver'}
                         className="Delivery-avatar-small"
                         onError={(e) => {
                           e.target.src = '/assets/user.svg';
                         }}
                       />
-                      {order.delivery_profile.full_name} ({order.delivery_profile.email})
+                      {order.delivery_profile?.full_name || 'Unknown'} ({order.delivery_profile?.email || 'No email'})
                     </span>
                   </p>
                 )}
@@ -705,7 +705,7 @@ export default function OrdersPage({ language }) {
                     <button 
                       type="button"
                       className="Primary-btn"
-                      onClick={() => window.location.href = getLocalizedPath('/edit-order', language) + `&id=${order.id}`}
+                      onClick={() => window.location.href = getLocalizedPath('/edit-order', language) + `&id=${order.id}&source=orders-list`}
                     >
                       {copy.edit}
                     </button>

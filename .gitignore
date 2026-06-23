@@ -72,6 +72,7 @@ typings/
 .env
 .env.test
 .env.example
+.VAPID_keys
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache
@@ -120,7 +121,6 @@ dist
 /android
 /ios
 /src-tauri
-/supabase
 
 capacitor.config.json
 
@@ -161,3 +161,6 @@ PROJECT.md
 ASSETS_GUIDE.md
 NOTIFICATION_SYSTEM.md
 SUPABASE_SETUP.md
+
+# Google
+firebase-adminsdk.json

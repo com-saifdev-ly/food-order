@@ -299,7 +299,7 @@ export default function OrderDetailPage({ language }) {
               <span className="Order-delivery-info">
                 <img 
                   src={deliveryAvatar} 
-                  alt={order.delivery_profile.full_name} 
+                  alt={order.delivery_profile?.full_name || 'Driver'} 
                   className="Delivery-avatar-small"
                   onError={(e) => {
                     console.error('Avatar load error, using fallback:', e.target.src);
@@ -328,7 +328,7 @@ export default function OrderDetailPage({ language }) {
                     Retry
                   </button>
                 )}
-                {order.delivery_profile.full_name} ({order.delivery_profile.email})
+                {order.delivery_profile?.full_name || 'Unknown'} ({order.delivery_profile?.email || 'No email'})
               </span>
             </p>
           )}

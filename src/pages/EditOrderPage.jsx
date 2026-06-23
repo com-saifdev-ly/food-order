@@ -21,8 +21,10 @@ export default function EditOrderPage({ language }) {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   
-  // Get order ID from URL (using &id= parameter after ?lang=en)
-  const orderId = new URLSearchParams(window.location.search).get('id');
+  // Get order ID and source from URL (using &id= and &source= parameters after ?lang=en)
+  const urlParams = new URLSearchParams(window.location.search);
+  const orderId = urlParams.get('id');
+  const source = urlParams.get('source') || 'orders-list';
 
   const [orderData, setOrderData] = useState({
     title: '',
@@ -153,7 +155,7 @@ export default function EditOrderPage({ language }) {
     }
 
     loadData();
-  }, [session, authLoading, orderId, language]);
+  }, [session, authLoading, orderId, language, source]);
 
   // Load delivery avatar when delivery_id changes
   useEffect(() => {
@@ -268,11 +270,18 @@ export default function EditOrderPage({ language }) {
       }
 
       setMessage(copy.orderUpdatedSuccess);
-      
+
       // Keep submitting true during redirect to prevent duplicate submissions
-      // Redirect after 2 seconds
+      // Redirect after 2 seconds to the appropriate page based on source
       setTimeout(() => {
-        window.location.href = getLocalizedPath('/orders', language);
+        if (source === 'order-detail') {
+          const url = new URL(window.location.origin + '/order-detail');
+          url.searchParams.set('lang', language);
+          url.searchParams.set('order', orderId);
+          window.location.href = `${url.pathname}${url.search}`;
+        } else {
+          window.location.href = getLocalizedPath('/orders', language);
+        }
       }, 2000);
 
     } catch (error) {
@@ -340,7 +349,16 @@ export default function EditOrderPage({ language }) {
           <h1>{copy.editOrder}</h1>
           <p className="Auth-message">{message}</p>
           <div className="Action-row">
-            <a className="Primary-btn" href={getLocalizedPath('/orders', language)}>
+            <a className="Primary-btn" href={
+              source === 'order-detail'
+                ? (() => {
+                    const url = new URL(window.location.origin + '/order-detail');
+                    url.searchParams.set('lang', language);
+                    url.searchParams.set('order', orderId);
+                    return `${url.pathname}${url.search}`;
+                  })()
+                : getLocalizedPath('/orders', language)
+            }>
               {copy.back}
             </a>
           </div>
