@@ -155,6 +155,9 @@ dist
 # Skills
 skills-lock.json
 
+# Supabase
+supabase
+
 
 # Guid
 PROJECT.md
